@@ -1,16 +1,21 @@
 <template>
   <div class='tinymce-container editor-container'>
-    <textarea class='tinymce-textarea' :id="id"></textarea>
+    <textarea class='tinymce-textarea' :id="tinymceId"></textarea>
+    <div class="editor-custom-btn-container">
+     <editorImage  color="#20a0ff" class="editor-upload-btn" @successCBK="imageSuccessCBK"></editorImage>
+      </div>
   </div>
 </template>
 
 <script>
+import editorImage from './components/editorImage'
+
 export default {
   name: 'tinymce',
+  components: { editorImage },
   props: {
     id: {
-      type: String,
-      default: 'tinymceEditor'
+      type: String
     },
     value: {
       type: String,
@@ -23,12 +28,6 @@ export default {
         return ['removeformat undo redo |  bullist numlist | outdent indent | forecolor | fullscreen code', 'bold italic blockquote | h2 p  media link | alignleft aligncenter alignright']
       }
     },
-    data() {
-      return {
-        hasChange: false,
-        hasInit: false
-      }
-    },
     menubar: {
       default: ''
     },
@@ -38,17 +37,24 @@ export default {
       default: 360
     }
   },
+  data() {
+    return {
+      hasChange: false,
+      hasInit: false,
+      tinymceId: this.id || 'vue-tinymce-' + +new Date()
+    }
+  },
   watch: {
     value(val) {
       if (!this.hasChange && this.hasInit) {
-        this.$nextTick(() => window.tinymce.get(this.id).setContent(val))
+        this.$nextTick(() => window.tinymce.get(this.tinymceId).setContent(val))
       }
     }
   },
   mounted() {
     const _this = this
     window.tinymce.init({
-      selector: `#${this.id}`,
+      selector: `#${this.tinymceId}`,
       height: this.height,
       body_class: 'panel-body ',
       object_resizing: false,
@@ -143,8 +149,16 @@ export default {
       }
     })
   },
+  methods: {
+    imageSuccessCBK(arr) {
+      const _this = this
+      arr.forEach(v => {
+        window.tinymce.get(_this.tinymceId).insertContent(`<img class="wscnph" src="${v.url}" >`)
+      })
+    }
+  },
   destroyed() {
-    window.tinymce.get(this.id).destroy()
+    window.tinymce.get(this.tinymceId).destroy()
   }
 }
 </script>
@@ -153,9 +167,17 @@ export default {
 .tinymce-container {
   position: relative
 }
-
 .tinymce-textarea {
   visibility: hidden;
   z-index: -1;
+}
+.editor-custom-btn-container {
+  position: absolute;
+  right: 15px;
+  /*z-index: 2005;*/
+  top: 18px;
+}
+.editor-upload-btn {
+  display: inline-block;
 }
 </style>
